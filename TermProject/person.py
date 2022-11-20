@@ -10,3 +10,15 @@ class Player():
     
     def getY(self):
         return self.y
+
+    def moveLeft(self):
+        self.x -= 10
+    
+    def moveRight(self):
+        self.x += 10
+    
+    def moveUp(self):
+        self.y -= 10
+
+    def moveDown(self):
+        self.y += 10
