@@ -3,7 +3,6 @@
 import random
 
 class Moves():
-
     def __init__(self,dmg,name,level):
         self.dmg = dmg + (level*3)
         self.moveName = name

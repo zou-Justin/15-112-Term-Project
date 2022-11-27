@@ -12,9 +12,12 @@ class Player():
     def getY(self):
         return self.y
 
-    def addPokemon(self,pokemon):
+    def catchPokemon(self,pokemon):
         if (len(self.pokemons) < 6):
             self.pokemons.append(pokemon)
+
+    def getPokemon(self):
+        return self.pokemons
 
     def moveLeft(self):
         self.x -= 10
