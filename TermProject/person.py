@@ -1,5 +1,6 @@
 #Justin Zou (justinzo)
 #Pokemon
+import random
 class Player():
     def __init__(self,x,y):
         self.x = x
@@ -18,6 +19,9 @@ class Player():
 
     def getPokemon(self):
         return self.pokemons
+    
+    def getPokemonIndex(self,index):
+        return self.pokemons[index]
 
     def moveLeft(self):
         self.x -= 10

@@ -31,6 +31,9 @@ class Pokemon():
     def getSprite(self):
         return self.sprite
 
+    def setSprite(self,newSprite):
+        self.sprite = newSprite
+
     def getType(self):
         return self.type
     

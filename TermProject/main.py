@@ -56,6 +56,7 @@ def bag_mousePressed(app,event):
     if (480 - app.xLength*2 <= event.x <= 480 + app.xLength*2 and (62 - app.yLength) <= event.y <= (62 + app.yLength)):
         app.battle = False
         app.mode = 'combat'
+        # app.enemyPokemon.setSprite(app.imageDictionary[app.enemyPokemon.getSprite()])
         app.player.catchPokemon(app.enemyPokemon)
 
 # ========================================================================
@@ -68,22 +69,48 @@ def Pokemon_redrawAll(app,canvas):
         if i % 2 == 0:
             if (i == 0):
                 canvas.create_image(131,29,image=ImageTk.PhotoImage(app.player.getPokemon()[i].getSprite()))
+                canvas.create_text(293,36,text=f'Lv: {app.player.getPokemon()[i].getLevel()}',fill='black', font='Helvetica 10')
+                canvas.create_text(215,33,text=f'{app.player.getPokemon()[i].getName()}',fill='black', font='Helvetica 10')
             elif (i == 2):
                 canvas.create_image(131,129,image=ImageTk.PhotoImage(app.player.getPokemon()[i].getSprite()))
+                canvas.create_text(293,136,text=f'Lv: {app.player.getPokemon()[i].getLevel()}',fill='black', font='Helvetica 10')
+                canvas.create_text(215,133,text=f'{app.player.getPokemon()[i].getName()}',fill='black', font='Helvetica 10')
             elif (i == 4):
                 canvas.create_image(131,229,image=ImageTk.PhotoImage(app.player.getPokemon()[i].getSprite()))
+                canvas.create_text(293,236,text=f'Lv: {app.player.getPokemon()[i].getLevel()}',fill='black', font='Helvetica 10')
+                canvas.create_text(215,233,text=f'{app.player.getPokemon()[i].getName()}',fill='black', font='Helvetica 10')
         elif i % 2 == 1:
             if (i == 1):
                 canvas.create_image(380,43,image=ImageTk.PhotoImage(app.player.getPokemon()[i].getSprite()))
+                canvas.create_text(539,50,text=f'Lv: {app.player.getPokemon()[i].getLevel()}',fill='black', font='Helvetica 10')
+                canvas.create_text(450,47,text=f'{app.player.getPokemon()[i].getName()}',fill='black', font='Helvetica 10')
             elif (i == 3):
                 canvas.create_image(380,143,image=ImageTk.PhotoImage(app.player.getPokemon()[i].getSprite()))
+                canvas.create_text(539,150,text=f'Lv: {app.player.getPokemon()[i].getLevel()}',fill='black', font='Helvetica 10')
+                canvas.create_text(450,147,text=f'{app.player.getPokemon()[i].getName()}',fill='black', font='Helvetica 10')
             elif (i == 5):
                 canvas.create_image(380,243,image=ImageTk.PhotoImage(app.player.getPokemon()[i].getSprite()))
-    
+                canvas.create_text(539,250,text=f'Lv: {app.player.getPokemon()[i].getLevel()}',fill='black', font='Helvetica 10')
+                canvas.create_text(450,247,text=f'{app.player.getPokemon()[i].getName()}',fill='black', font='Helvetica 10')
 
 def Pokemon_mousePressed(app,event):
     print(event.x,event.y)
     if (545 - app.xLength*2 <= event.x <= 545 + app.xLength*2 and (365 - app.yLength) <= event.y <= (365 + app.yLength)):
+        app.mode = 'combat'
+    elif (468 - app.xLength*2 <= event.x <= 468 + app.xLength*2 and (61 - app.yLength) <= event.y <= (61 + app.yLength)):
+        switchPokemon(app,1)
+        app.mode = 'combat'
+    elif (215 - app.xLength*2 <= event.x <= 215 + app.xLength*2 and (148 - app.yLength) <= event.y <= (148 + app.yLength)):
+        switchPokemon(app,2)
+        app.mode = 'combat'
+    elif (491 - app.xLength*2 <= event.x <= 491 + app.xLength*2 and (166 - app.yLength) <= event.y <= (166 + app.yLength)):
+        switchPokemon(app,3)
+        app.mode = 'combat'
+    elif (214 - app.xLength*2 <= event.x <= 214 + app.xLength*2 and (257 - app.yLength) <= event.y <= (257 + app.yLength)):
+        switchPokemon(app,4)
+        app.mode = 'combat'
+    elif (482 - app.xLength*2 <= event.x <= 482 + app.xLength*2 and (274 - app.yLength) <= event.y <= (274 + app.yLength)):
+        switchPokemon(app,5)
         app.mode = 'combat'
 
 # ========================================================================
@@ -187,6 +214,9 @@ def combat_keyPressed(app,event):
 # ========================================================================
 
 # General Functions
+def switchPokemon(app,index):
+    app.playerPokemon = app.player.getPokemonIndex(index)
+
 def encounterPokemon(app):
     chance = random.randrange(1,100)
     if (chance <= 54):
@@ -215,7 +245,6 @@ def enemyPokemonMaxDmg(app):
             maxDmg = app.enemyPokemon.getMoves(i).getDmg()
     print(f'{maxDmg} this is being returned')
     return maxDmg
-    
 
 # ========================================================================
 #Spritesheet is taken https://www.deviantart.com/mohammadataya/art/Pokemon-Trainer-Calem-By-Tedbited15-Updated-397076725
@@ -236,22 +265,26 @@ def appStarted(app):
     app.combatScreen = app.loadImage('img/combat.png')
     app.pokemonSprites = ['img/pikachu.png','img/bulbasaur.png','img/charmander.png','img/squritle.png']
     app.backSprites = ['img/backPikachu.png','img/backBulbasaur.png','img/backCharmander.png','img/backSquirtle.png']
+    app.imageDictionary = {}
     app.pokemonImageUnscaled = []
     app.pokemonImages = []
     app.backPokemon = []
     app.backPokemonImages = []
     for i in range(len(app.pokemonSprites)):
-        pokemon = app.loadImage(app.pokemonSprites[i]) 
-        app.pokemonImageUnscaled.append(pokemon)
+        img = app.loadImage(app.pokemonSprites[i]) 
+        app.pokemonImageUnscaled.append(img)
     for i in range(len(app.pokemonSprites)):
-        pokemon = app.loadImage(app.backSprites[i]) 
-        app.backPokemon.append(pokemon)
+        img = app.loadImage(app.backSprites[i]) 
+        app.backPokemon.append(img)
     for i in range(len(app.pokemonImageUnscaled)):
-        pokemons = app.scaleImage(app.pokemonImageUnscaled[i], 1/3)
-        app.pokemonImages.append(pokemons)
+        img = app.scaleImage(app.pokemonImageUnscaled[i], 1/3)
+        app.pokemonImages.append(img)
     for i in range(len(app.backPokemon)):
-        pokemons = app.scaleImage(app.backPokemon[i], 1/3)
-        app.backPokemonImages.append(pokemons)
+        img = app.scaleImage(app.backPokemon[i], 1/3)
+        app.backPokemonImages.append(img)
+    for i in app.pokemonSprites:
+        for j in app.backSprites:
+            app.imageDictionary[i] = j
     app.sprite = app.loadImage('img/player.png') 
     app.type = ['electric','grass','fire','water']
     app.name = ['pikachu','bulbasaur','charmander','squritle']
