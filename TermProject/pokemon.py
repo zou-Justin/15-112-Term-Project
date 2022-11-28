@@ -48,6 +48,9 @@ class Pokemon():
     
     def getMaxHealth(self):
         return self.maxHealth
+    
+    def setHealthMax(self):
+        self.health = self.maxHealth
 
     def getMoves(self,index):
         return self.moves[index]
