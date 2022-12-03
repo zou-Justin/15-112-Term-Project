@@ -6,13 +6,15 @@ from person import *
 import random
 
 #images were taken from pokemon game screenshots
+# image taken of Route 117 remake by Mucrush https://www.pinterest.com/pin/route-117-remake-by-pokemondiamonddeviantartcom-on-deviantart--133982157648104288/
 '''
 Relaistically need types
 need speed stat
 '''
 # Start Screen
+# gif code from cmu-112 website
 def startScreen_redrawAll(app,canvas):
-    canvas.create_image(app.width/2, app.height/2, image=ImageTk.PhotoImage(app.startScreenImg2))
+    canvas.create_image(app.width/2,app.height/2, image=ImageTk.PhotoImage(app.startScreenImg2))
     canvas.create_text(app.width/2,app.height-app.width/12, text=f'Press Enter to Start',
                                             fill='black', font='Helvetica 10')
 def startScreen_keyPressed(app,event):
@@ -22,34 +24,57 @@ def startScreen_keyPressed(app,event):
 
 # Game Screen
 def game_redrawAll(app,canvas):
-    canvas.create_image(app.width/2,app.height/2,image=ImageTk.PhotoImage(app.background))
+    x = app.width/2 - app.scrollX 
+    y = app.height/2
+    canvas.create_image(x,y,image=ImageTk.PhotoImage(app.background))
+    if (app.nextImage):
+        canvas.create_image(x,y,image=ImageTk.PhotoImage(app.background2))
     #sprite
     newSprite = app.Sprites[app.spriteCounter]
-    canvas.create_image(app.width/2 + app.player.getX(), app.height/2 + app.player.getY(), image=ImageTk.PhotoImage(newSprite))
-    for i in range(len(app.terrain)):
-        for j in range(len(app.terrain[0])):
-            # app.terrain[i][j] = (i*30,j*30)
-            canvas.create_image(i*30,j*30,image=ImageTk.PhotoImage(app.grass))
+    # for i in range(len(app.terrain)):
+    #     for j in range(len(app.terrain[0])):
+    #         canvas.create_image(300+ i*30,100 +j*30,image=ImageTk.PhotoImage(app.grass))
     for i in range(len(app.player.getPokemon())):
         app.player.getPokemonIndex(i).setHealthMax()
+    canvas.create_image(60, 90 + app.player.getY(), image=ImageTk.PhotoImage(newSprite))
 
 def game_keyPressed(app,event):
-    if (event.key == "Left"):
-        app.player.moveLeft()
-        app.spriteCounter = ((1 + app.spriteCounter) % 3) +6
-        encounterPokemon(app)
-    elif (event.key ==  "Right"):
+    if (app.scrollX >= -420):
+        if (event.key == "Left"):
+            app.player.moveLeft()
+            app.scrollX -= 15
+            app.spriteCounter = ((1 + app.spriteCounter) % 3) +6
+            if(app.inGrass):
+                encounterPokemon(app)
+    if (event.key ==  "Right"):
         app.player.moveRight()
+        app.scrollX += 15
         app.spriteCounter = ((1 + app.spriteCounter) % 3) +3
+        # if(app.inGrass):
         encounterPokemon(app)
-    elif (event.key == 'Up'):
+    if (event.key == 'Up'):
         app.player.moveUp()
         app.spriteCounter = ((1 + app.spriteCounter) % 3) +9
-        encounterPokemon(app)
+        if(app.inGrass):
+            encounterPokemon(app)
     elif (event.key == "Down"):
         app.player.moveDown()
         app.spriteCounter = ((1 + app.spriteCounter) % 3)
-        encounterPokemon(app)
+        if(app.inGrass):
+            encounterPokemon(app)
+
+def game_timerFired(app):
+    print(app.player.getX(),app.player.getY())
+    print(app.scrollX)
+    if (app.scrollX >= 1000):
+        app.nextImage = True
+        app.scrollX = -30
+
+    # if (300 <= app.player.getX() <= 370 and 100 <= app.player.getY() <= 200):
+    #     app.inGrass = True
+    # else:
+    #     app.inGrass = False
+    
 
 # ========================================================================
 
@@ -57,22 +82,23 @@ def game_keyPressed(app,event):
 
 def bag_redrawAll(app,canvas):
     canvas.create_image(app.width/2,app.height/2,image=ImageTk.PhotoImage(app.bagImg))
-    canvas.create_text(480,62, text=f'Throw a pokeball',fill='black', font='Helvetica 10')
+    canvas.create_image(377,70,image=ImageTk.PhotoImage(app.pokeball))
+    canvas.create_text(485,75, text=f'Throw a pokeball',fill='black', font='Helvetica 15')
 
 def bag_mousePressed(app,event):
     print(event.x,event.y)
     if (91 - app.xLength*2 <= event.x <= 91 + app.xLength*2 and (311 - app.yLength) <= event.y <= (311 + app.yLength)):
         app.mode = 'combat'
-    if (480 - app.xLength*2 <= event.x <= 480 + app.xLength*2 and (62 - app.yLength) <= event.y <= (62 + app.yLength)):
+    if (485 - app.xLength*2 <= event.x <= 485 + app.xLength*2 and (75 - app.yLength) <= event.y <= (75 + app.yLength)):
         app.battle = False
-        app.mode = 'game'
-        # app.enemyPokemon.setSprite(app.imageDictionary[app.enemyPokemon.getSprite()])
+        app.catching = True
+        app.mode = 'combat'
+        app.enemyPokemon.setSprite(app.enemyBackSprite)
         app.player.catchPokemon(app.enemyPokemon)
 
 # ========================================================================
 
 #Pokemon Screen
-
 def Pokemon_redrawAll(app,canvas):
     canvas.create_image(app.width/2,app.height/2,image=ImageTk.PhotoImage(app.selectionImg))
     for i in range(0,len(app.player.getPokemon())):
@@ -128,18 +154,27 @@ def Pokemon_mousePressed(app,event):
 
 # ========================================================================
 
+
+
 # combat Screen
 def combat_redrawAll(app,canvas):
     canvas.create_image(app.width/2, app.height/2, image=ImageTk.PhotoImage(app.combatScreen))
-    canvas.create_image(app.width/2 + 140, app.height/2 -80, image=ImageTk.PhotoImage(app.enemyPokemon.getSprite()))
     canvas.create_image(app.width/2 - 140, app.height/2 + 30, image=ImageTk.PhotoImage(app.playerPokemon.getSprite()))
+    if (app.catching == False):
+        canvas.create_image(app.width/2 + 140, app.height/2 -80, image=ImageTk.PhotoImage(app.enemyPokemon.getSprite()))
     canvas.create_text(140,70, text=f'{app.enemyPokemon.getName()}',fill='black', font='Helvetica 10')
     canvas.create_text(430,205, text=f'{app.playerPokemon.getName()}',fill='black', font='Helvetica 10')
     canvas.create_text(129,96, text=f'{app.enemyPokemon.getHealth()} / {app.enemyPokemon.getMaxHealth()}',fill='black', font='Helvetica 10')
     canvas.create_text(525,245, text=f'{app.playerPokemon.getHealth()} / {app.playerPokemon.getMaxHealth()}',fill='black', font='Helvetica 10')
     canvas.create_text(291,71, text=f'Lv: {app.enemyPokemon.getLevel()}',fill='black', font='Helvetica 10')
     canvas.create_text(569,205, text=f'Lv: {app.playerPokemon.getLevel()}',fill='black', font='Helvetica 10')
-    if (app.battle == False):
+    if (app.catching == True):
+        if(app.time >20):
+            canvas.create_text(331,326, text=f'Caught!',fill='black', font='Helvetica 10')
+        else:
+            canvas.create_text(331,326, text=f'Catching Pokemon',fill='black', font='Helvetica 10')  
+            canvas.create_image(app.width/2 + 140, app.height/2 -80, image=ImageTk.PhotoImage(app.pokeball))
+    elif (app.battle == False):
         #item
         canvas.create_rectangle(187-app.xLength*2 ,352 + app.yLength,187+app.xLength*2,352-app.yLength,fill ='white')
         canvas.create_text(187,352, text=f'Bag',fill='black', font='Helvetica 10')
@@ -155,22 +190,26 @@ def combat_redrawAll(app,canvas):
     elif (app.battle == True):
         #move1
         canvas.create_rectangle(187-app.xLength*2 ,352 + app.yLength,187+app.xLength*2,352-app.yLength,fill ='white')
-        canvas.create_text(187,352, text=f'{app.playerPokemon.getMoves(2).getMoveName()}',fill='black', font='Helvetica 10')
+        canvas.create_text(187,352, text=f'{app.playerPokemon.getMoves(1).getMoveName()}',fill='black', font='Helvetica 10')
         #move2
         canvas.create_rectangle(483-app.xLength*2 ,352 + app.yLength,483+app.xLength*2,352-app.yLength,fill ='white')
-        canvas.create_text(483,352, text=f'{app.playerPokemon.getMoves(1).getMoveName()}',fill='black', font='Helvetica 10')
+        canvas.create_text(483,352, text=f'{app.playerPokemon.getMoves(0).getMoveName()}',fill='black', font='Helvetica 10')
         #move3
         canvas.create_rectangle(187-app.xLength*2 ,300 + app.yLength,187+app.xLength*2,300-app.yLength,fill ='white')
-        canvas.create_text(187,300, text=f'{app.playerPokemon.getMoves(3).getMoveName()}',fill='black', font='Helvetica 10')
+        canvas.create_text(187,300, text=f'{app.playerPokemon.getMoves(2).getMoveName()}',fill='black', font='Helvetica 10')
         #move4
         canvas.create_rectangle(483-app.xLength*2 ,300 + app.yLength,483+app.xLength*2,300-app.yLength,fill ='white')
-        canvas.create_text(483,300, text=f'{app.playerPokemon.getMoves(0).getMoveName()}',fill='black', font='Helvetica 10')
-    elif (app.text == True):
-        pass
+        canvas.create_text(483,300, text=f'{app.playerPokemon.getMoves(3).getMoveName()}',fill='black', font='Helvetica 10')
+
+
 
 def combat_mousePressed(app,event):
-    print(event.x)
-    print(event.y)
+    # print(event.x)
+    # print(event.y)
+    if (app.catching == True):
+        app.mode = 'game'
+        app.catching = False
+        app.time = 0
     if (app.battle == False):
         if (187 - app.xLength*2 <= event.x <= 187 + app.xLength*2 and (300 - app.yLength) <= event.y <= (300 + app.yLength)):
             #Top Left
@@ -190,110 +229,223 @@ def combat_mousePressed(app,event):
     else:
         if (187 - app.xLength*2 <= event.x <= 187 + app.xLength*2 and (300 - app.yLength) <= event.y <= (300 + app.yLength)):
             #Top Left
+            app.Move2 = True
             app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(2).getDmg())
-            enemyPokemonAttacks(app)
-            print(f'{app.enemyPokemon.getName()} deals {app.enemyPokemon.getMoves(2).getDmg()} enemy has {app.playerPokemon.getHealth()} heath left')
-            print(f'Enemy {app.playerPokemon.getName()} deals {app.playerPokemon.getMoves(2).getDmg()} enemy has {app.enemyPokemon.getHealth()} heath left')
+            enemyPokemonAttacks(app,app.moveIndex)
+            app.moveIndex += 1
+            # if (app.playerPokemon.getMoves(2).getSpeed() >= app.moveLists[app.moveIndex % len(app.moveLists)].getSpeed()):
+            #     app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(2).getDmg())
+            #     enemyPokemonAttacks(app,app.moveIndex)
+            #     app.moveIndex += 1
+            # else:
+            #     enemyPokemonAttacks(app,app.moveIndex)
+            #     app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(2).getDmg())
+            #     app.moveIndex += 1
+
+            print(f'Enemy {app.enemyPokemon.getName()} deals {app.enemyPokemon.getMoves(2).getDmg()} ourPokemon has {app.playerPokemon.getHealth()} health left')
+            print(f'{app.playerPokemon.getName()} deals {app.playerPokemon.getMoves(2).getDmg()} enemy has {app.enemyPokemon.getHealth()} health left')
         elif (187 - app.xLength*2 <= event.x <= 187 + app.xLength*2 and (352 - app.yLength) <= event.y <= (352 + app.yLength)):
             #bottom Left
-            app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(1).getDmg())
-            enemyPokemonAttacks(app)
-            print(f'{app.enemyPokemon.getName()} deals {app.enemyPokemon.getMoves(1).getDmg()} enemy has {app.playerPokemon.getHealth()} heath left')
-            print(f'Enemy {app.playerPokemon.getName()} deals {app.playerPokemon.getMoves(1).getDmg()} enemy has {app.enemyPokemon.getHealth()} heath left')
+            app.Move1 = True
+            app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(2).getDmg())
+            enemyPokemonAttacks(app,app.moveIndex)
+            app.moveIndex += 1
+            # if (app.playerPokemon.getMoves(1).getSpeed() >= app.moveLists[app.moveIndex % len(app.moveLists)].getSpeed()):
+            #     app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(1).getDmg())
+            #     enemyPokemonAttacks(app,app.moveIndex)
+            #     app.moveIndex += 1
+            # else:
+            #     enemyPokemonAttacks(app,app.moveIndex)
+            #     app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(1).getDmg())
+            #     app.moveIndex += 1
+            print(f'Enemy {app.enemyPokemon.getName()} deals {app.enemyPokemon.getMoves(1).getDmg()} ourPokemon has {app.playerPokemon.getHealth()} health left')
+            print(f'{app.playerPokemon.getName()} deals {app.playerPokemon.getMoves(1).getDmg()} enemy has {app.enemyPokemon.getHealth()} health left')
         elif (483 - app.xLength*2 <= event.x <= 483 + app.xLength*2 and (300 - app.yLength) <= event.y <= (300 + app.yLength)):
             #Top Right
-            print(app.playerPokemon.getMoves(3).getDmg())
-            app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(3).getDmg())
-            enemyPokemonAttacks(app)
-            print(f'{app.enemyPokemon.getName()} deals {app.enemyPokemon.getMoves(3).getDmg()} enemy has {app.playerPokemon.getHealth()} heath left')
-            print(f'Enemy {app.playerPokemon.getName()} deals {app.playerPokemon.getMoves(3).getDmg()} enemy has {app.enemyPokemon.getHealth()} heath left')
+            app.Move3 = True
+            app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(2).getDmg())
+            enemyPokemonAttacks(app,app.moveIndex)
+            app.moveIndex += 1
+            # if (app.playerPokemon.getMoves(3).getSpeed() >= app.moveLists[app.moveIndex % len(app.moveLists)].getSpeed()):
+            #     app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(3).getDmg())
+            #     enemyPokemonAttacks(app,app.moveIndex)
+            #     app.moveIndex += 1
+            # else:
+            #     enemyPokemonAttacks(app,app.moveIndex)
+            #     app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(3).getDmg())
+            #     app.moveIndex += 1
+            print(f'Enemy {app.enemyPokemon.getName()} deals {app.enemyPokemon.getMoves(3).getDmg()} ourPokemon has {app.playerPokemon.getHealth()} health left')
+            print(f'{app.playerPokemon.getName()} deals {app.playerPokemon.getMoves(3).getDmg()} enemy has {app.enemyPokemon.getHealth()} health left')
         elif (483 - app.xLength*2 <= event.x <= 483 + app.xLength*2 and (352 - app.yLength) <= event.y <= (352 + app.yLength)):
             #bottom right
-            app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(0).getDmg())
-            enemyPokemonAttacks(app)
-            print(f'{app.playerPokemon.getName()} deals {app.playerPokemon.getMoves(0).getDmg()} enemy has {app.enemyPokemon.getHealth()} heath left')
-            print(f'Enemy {app.enemyPokemon.getName()} deals {app.enemyPokemon.getMoves(0).getDmg()} enemy has {app.playerPokemon.getHealth()} heath left')
+            app.Move0 = True
+            app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(2).getDmg())
+            enemyPokemonAttacks(app,app.moveIndex)
+            app.moveIndex += 1
+            # if (app.playerPokemon.getMoves(0).getSpeed() >= app.moveLists[app.moveIndex % len(app.moveLists)].getSpeed()):
+            #     app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(0).getDmg())
+            #     enemyPokemonAttacks(app,app.moveIndex % len(app.moveLists))
+            #     app.moveIndex += 1
+            # else:
+            #     enemyPokemonAttacks(app,app.moveIndex % len(app.moveLists))
+            #     app.enemyPokemon.takeDmg(app.playerPokemon.getMoves(0).getDmg())
+            #     app.moveIndex += 1
+            # enemyPokemonAttacks(app)
+            print(f'Enemy {app.enemyPokemon.getName()} deals {app.enemyPokemon.getMoves(0).getDmg()} ourPokemon has {app.playerPokemon.getHealth()} health left')
+            print(f'{app.playerPokemon.getName()} deals {app.playerPokemon.getMoves(0).getDmg()} enemy has {app.enemyPokemon.getHealth()} health left')
+            
 
 def combat_timerFired(app):
     if (app.enemyPokemon.getHealth() <= 0 or app.playerPokemon.getHealth() <= 0):
         #something about the game being over message
         app.battle = False
         app.mode = 'game'
+    if (app.catching):
+        app.time = 1 + app.time
+            
+
 def combat_keyPressed(app,event):
     if event.key == 'Escape':
         app.battle = False
 # ========================================================================
 
 # General Functions
+#Switching to a new Pokemon
 def switchPokemon(app,index):
     app.playerPokemon = app.player.getPokemonIndex(index)
 
+#Chance to encounter a pokemon
 def encounterPokemon(app):
     # if (app.player.getX() <= )
     chance = random.randrange(1,100)
-    print(chance)
     if (chance <= 4):
         app.mode = 'combat'
         newPokemon(app,5,10)
 
+#creating a new pokemon to face
 def newPokemon(app,levelMin,levelMax):
     randLevel = random.randint(75,100)
     randEmenyPokemon = random.randint(0,len(app.pokemonSprites)-1)
-    enemyPokemon = Pokemon(app.type[randEmenyPokemon],app.name[randEmenyPokemon],randLevel,app.pokemonImages[randEmenyPokemon],app.moves[randEmenyPokemon])
+    enemyPokemon = Pokemon(None,app.name[randEmenyPokemon],randLevel,app.pokemonImages[randEmenyPokemon],app.moves[randEmenyPokemon])
+    app.enemyBackSprite = app.backPokemonImages[randEmenyPokemon]
     enemyCopyMoves = []
     for i in enemyPokemon.getAllMoves():
         enemyCopyMoves.append(Moves(i.getDmg(),i.getMoveName(),enemyPokemon.getLevel()))
+    for i in enemyCopyMoves:
+        if i.getMoveName() == 'Leer':
+            i.makeDefensive()
+        elif i.getMoveName() == 'Quick Attack':
+            i.isFast(2)
     enemyPokemon.setMoves(enemyCopyMoves)
     app.enemyPokemon = enemyPokemon
 
 #enemy Pokemon should be doing the maximum dmg at all times
-def enemyPokemonAttacks(app):
-    damage = enemyPokemonMaxDmg(app)
-    app.playerPokemon.takeDmg(damage)
+#Looked at AI TP https://www.cs.cmu.edu/~112/notes/student-tp-guides/GameAI.pdf
+
+def enemyPokemonAttacks(app,index):
+    app.moveLists = bestPossibleMove(app,app.playerPokemon.getHealth(),[])
+    index = index % len(app.moveLists)
+    app.playerPokemon.takeDmg(app.moveLists[index][1])
+
+   
 
 def enemyPokemonMaxDmg(app):
     maxDmg = 0
+    index = 0
     for i in range(len(app.enemyPokemon.getAllMoves())):
         if (app.enemyPokemon.getMoves(i).getDmg() >= maxDmg):
             maxDmg = app.enemyPokemon.getMoves(i).getDmg()
-    print(f'{maxDmg} this is being returned')
-    return maxDmg
+            index = i
+    return (maxDmg,index)
+
+def getSpeedMove(app):
+    maxSpeed = 0
+    index = 0
+    for i in range(len(app.enemyPokemon.getAllMoves())):
+        if (app.enemyPokemon.getMoves(i).getSpeed() >= maxSpeed):
+            maxSpeed = app.enemyPokemon.getMoves(i).getSpeed()
+            index = i
+    return (maxSpeed,index)
+
+#base case should be after going through all the moves
+#recursive backtracking that we learned in class
+def bestPossibleMove(app,health,L):
+    if (health <= 0):
+        return L
+    else:
+        for i in app.enemyPokemon.getAllMoves():
+            if (isBetterMove(i,getSpeedMove(app)[0],enemyPokemonMaxDmg(app)[0],health)):
+                moveName = i.getMoveName()
+                L.append((moveName,i.getDmg()))
+                health -= i.getDmg()
+                solution = bestPossibleMove(app,health,L)
+                if (solution != None):
+                    return solution
+                L.pop((moveName,i.getDmg()))
+                health += i.getDmg
+        return None
+    
+def isBetterMove(move,speed,dmg,health):
+    if (move.getSpeed() >= speed and move.getDmg() >= health) or (move.getDmg() >= dmg):
+        return True
+    else:
+        return False
+    
+    
 
 # ========================================================================
 #Spritesheet is taken https://www.deviantart.com/mohammadataya/art/Pokemon-Trainer-Calem-By-Tedbited15-Updated-397076725
 #pikachus are from https://www.deviantart.com/koreyriera/art/Pikachu-Custom-Front-And-Back-Sprite-776102670
-#sidescrolling is from Animations Part 4 notes
+# Rest of the art are found from screnshots of the game
+# Sidescrolling is from Animations Part 4 notes
 def appStarted(app):
     #variables
     app.mode = 'startScreen'
-    app.scrollX = 0
+    app.scrollX = -100
+    app.scrollY = 0
     app.yLength = 20
+    app.scrollX = 0
     app.xLength = 50
     app.battle = False
-    app.player = Player(0,0)
+    app.player = Player(60,90)
+    app.inGrass =False
+    app.nextImage = False
+    app.time = 0
     app.text = False
     app.playerPokemon = None
     app.startScreenImg = app.loadImage('img/pokemonImg.jpg')
     app.startScreenImg2 = app.scaleImage(app.startScreenImg, 4/7)
-    app.background = app.loadImage('img/pokemonTestBackground.png')
+    app.background = app.loadImage('img/longRoad.png')
+    app.background = app.scaleImage(app.background, 3/2)
+    app.background2 = app.loadImage('img/longRoad2.png')
+    app.background2 = app.scaleImage(app.background2, 3/2)
     app.grass = app.loadImage('img/grass.png')
     app.bagImg = app.loadImage('img/bag.jpg')
     app.selectionImg = app.loadImage('img/selection.png')
     app.combatScreen = app.loadImage('img/combat.png')
-    app.pokemonSprites = ['img/pikachu.png','img/bulbasaur.png','img/charmander.png','img/squritle.png']
-    app.backSprites = ['img/backPikachu.png','img/backBulbasaur.png','img/backCharmander.png','img/backSquirtle.png']
+    app.catching = False
+    pokeball = app.loadImage('img/pokeball.png')
+    app.pokeball = app.scaleImage(pokeball,1/3)
+    app.enemyBackSprite = None
+    app.pokemonSprites = ['img/pikachu.png','img/bulbasaur.png','img/charmander.png','img/squritle.png',
+    'img/slaking.png','img/torchic.png','img/treeko.png','img/swellow.png','img/mudkip.png','img/machamp.png','img/salamence.png']
+    app.backSprites = ['img/backPikachu.png','img/backBulbasaur.png','img/backCharmander.png','img/backSquirtle.png',
+    'img/backSlaking.png','img/backTorchic.png','img/backTreeko.png','img/backSwellow.png','img/backMudkip.png','img/backMachamp.png','img/backSalamence.png']
     app.imageDictionary = {}
     app.pokemonImageUnscaled = []
     app.pokemonImages = []
     app.backPokemon = []
     app.backPokemonImages = []
+    app.moveIndex = 0
+    app.moveLists = []
     #terrain
     app.terrain = [[1] * 5 for i in range(4)]
+
     #load in sprites
     for i in range(len(app.pokemonSprites)):
         img = app.loadImage(app.pokemonSprites[i]) 
         app.pokemonImageUnscaled.append(img)
-    for i in range(len(app.pokemonSprites)):
+    for i in range(len(app.backSprites)):
         img = app.loadImage(app.backSprites[i]) 
         app.backPokemon.append(img)
     for i in range(len(app.pokemonImageUnscaled)):
@@ -306,37 +458,80 @@ def appStarted(app):
         for j in app.backSprites:
             app.imageDictionary[i] = j
     app.sprite = app.loadImage('img/player.png') 
-    app.type = ['electric','grass','fire','water']
-    app.name = ['pikachu','bulbasaur','charmander','squritle']
-    app.moveName = [['Thunderbolt','Tackle','Scratch','Leer'],
-                ['Vine Whip','Tackle','Scratch','Leer'],
-                ['Ember','Tackle','Scratch','Leer'],
-                ['Water Gun','Tackle','Scratch','Leer'],
+    app.type = ['electric','grass','fire','water','normal','flying','fighting','dragon']
+    app.moveToType = {
+        'electric':'Thunderbolt',
+        'grass':'Vine Whip',
+        'fire':'Flamethrower',
+        'water':'Hydro Pump',
+        'normal':'Pound',
+        'flying':'Aerial Ace',
+        'fighting':'Close Combat',
+        'dragon':'Dragons Breath'
+    }
+    app.pokemonToType = {
+        'Pikachu':'electric',
+        'Bulbasaur':'grass',
+        'Charmander':'fire',
+        'Squritle':'water',
+        'Slaking':'normal',
+        'Torchic':'fire',
+        'Treeko':'grass',
+        'Swellow':'flying',
+        'Mudkip':'water',
+        "Machamp":'fighting',
+        "Salamence":"dragon"
+    }
+    app.name = ['Pikachu','Bulbasaur','Charmander','Squritle','Slaking','Torchic','Treeko','Swellow','Mudkip','Machamp','Salamence']
+    #dont hardcode this pls make it better fool
+    #maybe more complexity
+    app.defensiveMoves = ['Leer','Growl','Thunder Wave']
+    app.offensiveNormalMoves = ['Tackle','Scratch','Pound','Slam']
+    app.specialMove = ['Flamethrower','Thunderbolt','Vine Whip','Hydro Pump','Dragons Breath','Aerial Ace','Close Combat']
+    app.speedMoves = ['Quick Attack','Shadow Sneak','SuckerPunch']
+    
+    app.moveName = [['Leer','Tackle','Quick Attack','Thunderbolt'],
+                ['Growl','Tackle','Quick Attack','Vine Whip'],
+                ['Leer','Tackle','Quick Attack','Ember'],
+                ['Leer','Tackle','Quick Attack','Water Gun'],
+                ['Leer','Tackle','Quick Attack','Thunderbolt'],
+                ['Leer','Tackle','Shadow Sneak','Vine Whip'],
+                ['Leer','Tackle','Quick Attack','Ember'],
+                ['Leer','Tackle','Quick Attack','Water Gun'],
+                ['Leer','Tackle','Quick Attack','Thunderbolt'],
+                ['Leer','Tackle','Quick Attack','Vine Whip'],
+                ['Leer','Tackle','Quick Attack','Ember'],
+                ['Leer','Tackle','Quick Attack','Water Gun']
     ]
-    #Some animation involving moves
     app.moves = []
     for i in app.moveName:
         copyMove = []
         for j in range(len(i)):
-            copyMove.append(Moves(30 * (j+1),i[j],1))
+            copyMove.append(Moves(10 * j,i[j],1))
         app.moves.append(copyMove)
     app.enemyPokemon = None
+    #move texts
+    app.Move0 = False
     app.Move1 = False
     app.Move2 = False
     app.Move3 = False
-    app.Move4 = False
     #create your pokemon
-    randomPokemonIndex = random.randint(0,len(app.name)-1)
+    randomPokemonIndex = random.randint(0,len(app.pokemonSprites)-1)
     randLevel2 = random.randint(75,100) #this should eventually be a set value
-    ourPokemon = Pokemon(app.type[randomPokemonIndex],app.name[randomPokemonIndex],randLevel2,app.backPokemonImages[randomPokemonIndex],app.moves[randomPokemonIndex])
+    ourPokemon = Pokemon(None,app.name[randomPokemonIndex],randLevel2,app.backPokemonImages[randomPokemonIndex],app.moves[randomPokemonIndex])
     copyMoves = []
     for i in ourPokemon.getAllMoves():
         copyMoves.append(Moves(i.getDmg(),i.getMoveName(),ourPokemon.getLevel()))
+    for i in range(len(copyMoves)):
+        if i == 0:
+            copyMoves[i].makeDefensive()
+        elif i == 2:
+            copyMoves[i].isFast(2)
     ourPokemon.setMoves(copyMoves)
     app.playerPokemon = ourPokemon
     app.player.catchPokemon(app.playerPokemon)
    
-    #animations for player
+    #animations for player; basic structure taken from 15-112 notes
     movement = app.loadImage('img/MoveRight.png')
     app.Sprites = []
     for i in range(12):

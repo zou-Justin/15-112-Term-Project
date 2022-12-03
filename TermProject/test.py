@@ -1,24 +1,10 @@
 from cmu_112_graphics import *
 
+
+def redrawAll(app,canvas):
+    canvas.create_line(400,0,0,400,fill='black')
+
 def appStarted(app):
-    url = 'http://www.cs.cmu.edu/~112/notes/sample-spritestrip.png'
-    spritestrip = app.loadImage(url)
-    app.sprites = [ ]
-    for i in range(6):
-        sprite = spritestrip.crop((30+260*i, 30, 230+260*i, 250))
-        app.sprites.append(sprite)
-    app.spriteCounter = 0
+    pass
 
-    
-def keyPressed(app,event):
-    if (event.key == "Left"):
-        app.spriteCounter = (1 + app.spriteCounter) % len(app.sprites)
-    
-# def timerFired(app):
-#     app.spriteCounter = (1 + app.spriteCounter) % len(app.sprites)
-
-def redrawAll(app, canvas):
-    sprite = app.sprites[app.spriteCounter]
-    canvas.create_image(200, 200, image=ImageTk.PhotoImage(sprite))
-
-runApp(width=400, height=400)
+runApp(width=700, height=400)

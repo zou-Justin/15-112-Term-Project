@@ -13,6 +13,9 @@ class Player():
     def getY(self):
         return self.y
 
+    def setX(self,newX):
+        self.x = newX
+
     def catchPokemon(self,pokemon):
         if (len(self.pokemons) < 6):
             self.pokemons.append(pokemon)
