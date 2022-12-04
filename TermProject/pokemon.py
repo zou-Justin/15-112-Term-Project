@@ -20,6 +20,9 @@ class Pokemon():
     def getSprite(self):
         return self.sprite
 
+    def __repr__(self):
+        return self.name
+
     def setDefense(self,newDefense):
         self.defense = newDefense
 
