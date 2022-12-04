@@ -9,7 +9,7 @@ class Pokemon():
         self.name = name
         self.defense = 0 #level//10
         self.level = level
-        self.maxHealth = int((level * 3.7) + random.randint(0,130))
+        self.maxHealth = int((level * 10) + random.randint(0,130))
         self.health = self.maxHealth
         self.speed = level * random.randint(4,9)
         self.sprite = sprite
@@ -76,7 +76,7 @@ class Pokemon():
 
 class Moves(Pokemon):
     def __init__(self,dmg,name,level):
-        self.dmg = dmg + (level//2)
+        self.dmg = dmg + (level * 3)
         self.moveName = name
         self.isDefensive = False
         self.priority = 0

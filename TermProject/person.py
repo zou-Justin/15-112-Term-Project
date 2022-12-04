@@ -16,6 +16,9 @@ class Player():
 
     def setX(self,newX):
         self.x = newX
+    
+    def setY(self,newY):
+        self.y = newY
 
     def catchPokemon(self,pokemon):
         if (len(self.pokemons) < 6):
@@ -26,7 +29,7 @@ class Player():
 
     def increaseIndex(self):
         self.currentIndex += 1
-        
+
     def getPokemon(self):
         return self.pokemons
 

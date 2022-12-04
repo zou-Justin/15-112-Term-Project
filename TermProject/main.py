@@ -38,8 +38,10 @@ def game_redrawAll(app,canvas):
             canvas.create_image(newX,newY,image=ImageTk.PhotoImage(app.grass))
     for i in range(len(app.player.getPokemon())):
         app.player.getPokemonIndex(i).setHealthMax()
+    if (app.finalRoom):
+        canvas.create_image(x,y,image=ImageTk.PhotoImage(app.background))
+        canvas.create_image(100- app.scrollX ,100,image = ImageTk.PhotoImage(app.trainerSprite))
     canvas.create_image(60, 90 + app.player.getY(), image=ImageTk.PhotoImage(newSprite))
-    canvas.create_image(100- app.scrollX ,100,image = ImageTk.PhotoImage(app.trainerSprite))
 
 def inTerrain(app):
     if app.xScale <= app.player.getX() <= app.xScale +((len(app.terrain)-1) *30)and \
@@ -84,10 +86,12 @@ def game_keyPressed(app,event):
             encounterPokemon(app)
 
 def game_timerFired(app):
-    # print(app.player.getX(),app.player.getY())
-    print(app.inGrass)
-    # if (inBound(app.player.getX(),app.player.getY(),app.enemyTrainer.getX(),app.enemyTrainer.getY())):
-    trainerAI(app)
+    print(app.player.getX(),app.player.getY())
+    print(app.enemyTrainer.getX(),app.enemyTrainer.getY())
+    # print(app.inGrass)
+    if (app.finalRoom):
+        if (inBound(app.player.getX(),app.player.getY(),app.enemyTrainer.getX(),app.enemyTrainer.getY())):
+            trainerAI(app)
     if (app.nextImage):
         app.xScale = 300
         app.grass = app.loadImage('img/rock.png')
@@ -98,12 +102,20 @@ def game_timerFired(app):
     elif (340< app.scrollX <= 440):
         app.terrain = [[1] * app.randomRow for i in range(app.randomCol)]
         app.xScale = 600
-    if (app.scrollX >= 880):
+    if (app.scrollX >= 880 and app.nextImage):
+        app.finalRoom = True
+        app.scrollX = 30
+        app.player.setX(60)
+        app.player.setY(90)
+    elif (app.scrollX >= 880):
         app.nextImage = True
-        app.scrollX = -30
+        app.scrollX = 0
+        app.player.setX(60)
+        app.player.setY(90)
+    
 
 def inBound(x1,y1,x2,y2):
-    if (((x2-x1) ** 2) + ((y2-y1) **2))**(1/2) <= 10:
+    if ((((x2-x1) ** 2) + ((y2-y1) **2))**(1/2)) <= 20:
        return True
     return False
 
@@ -204,7 +216,7 @@ def combat_redrawAll(app,canvas):
         canvas.create_image(app.width/2 + 140, app.height/2 -80, image=ImageTk.PhotoImage(app.enemyPokemon.getSprite()))
     canvas.create_text(140,70, text=f'{app.enemyPokemon.getName()}',fill='black', font='Helvetica 10')
     canvas.create_text(430,205, text=f'{app.playerPokemon.getName()}',fill='black', font='Helvetica 10')
-    canvas.create_text(129,96, text=f'{app.enemyPokemon.getHealth()} / {app.enemyPokemon.getMaxHealth()}',fill='black', font='Helvetica 10')
+    canvas.create_text(159,96, text=f'{app.enemyPokemon.getHealth()} / {app.enemyPokemon.getMaxHealth()}',fill='black', font='Helvetica 10')
     canvas.create_text(525,245, text=f'{app.playerPokemon.getHealth()} / {app.playerPokemon.getMaxHealth()}',fill='black', font='Helvetica 10')
     canvas.create_text(291,71, text=f'Lv: {app.enemyPokemon.getLevel()}',fill='black', font='Helvetica 10')
     canvas.create_text(569,205, text=f'Lv: {app.playerPokemon.getLevel()}',fill='black', font='Helvetica 10')
@@ -349,6 +361,8 @@ def combat_timerFired(app):
         #something about the game being over message
         app.battle = False
         app.mode = 'game'
+    if (app.inTrainerBattle and allPokemonDeadTrainer(app)):
+        app.mode = 'winScreen'
     elif (app.enemyPokemon.getHealth() <= 0 and app.inTrainerBattle == True):
         switchPokemonEnemy(app,app.enemyTrainer.getCurrentIndex()+1)
         app.enemyTrainer.increaseIndex()
@@ -359,7 +373,6 @@ def combat_timerFired(app):
     if (app.catching):
         app.time = 1 + app.time
             
-
 def combat_keyPressed(app,event):
     if event.key == 'Escape':
         app.battle = False
@@ -374,6 +387,12 @@ def endScreen_redrawAll(app,canvas):
 def endScreen_keyPressed(app,event):
     if (event.key == 'r'):
         appStarted(app)
+# ========================================================================
+
+#win Screen
+def winScreen_redrawAll(app,canvas):
+    canvas.create_rectangle(0,0,app.width,app.height,fill='white')
+    canvas.create_text(app.width/2,app.height/2, text=f' You are the Champion! Congratulations!',fill='Black', font='Helvetica 10')
 
 
 
@@ -387,12 +406,19 @@ def allPokemonDead(app):
             return False
     return True
 
+def allPokemonDeadTrainer(app):
+    for i in app.enemyTrainer.getPokemon():
+        if i.getHealth() > 0:
+            return False
+    return True
+
 #Switching to a new Pokemon
 def switchPokemon(app,index):
     if (len(app.player.getPokemon()) > index):
         app.playerPokemon = app.player.getPokemonIndex(index)
 
 def switchPokemonEnemy(app,index):
+    index = index % 6
     app.enemyPokemon = app.enemyTrainer.getPokemonIndex(index)
 
 #Chance to encounter a pokemon
@@ -421,7 +447,7 @@ def newPokemon(app):
     app.enemyPokemon = enemyPokemon
 
 def newPokemonTrainer(app):
-    randLevel = random.randint(10,40)
+    randLevel = random.randint(60,100)
     randEmenyPokemon = random.randint(0,len(app.pokemonSprites)-1)
     enemyPokemon = Pokemon(None,app.name[randEmenyPokemon],randLevel,app.pokemonImages[randEmenyPokemon],app.moves[randEmenyPokemon])
     enemyCopyMoves = []
@@ -440,7 +466,7 @@ def trainerPokemon(app):
     while(app.enemyTrainer.pokemonAmount() < 6):
         app.enemyTrainer.catchPokemon(newPokemonTrainer(app))
 
-
+#switches the pokemon out when it is about to die
 def trainerAI(app):
     app.mode = 'combat'
     app.inTrainerBattle = True
@@ -449,12 +475,16 @@ def trainerAI(app):
     if (app.enemyTrainer.getCurrentIndex() < 6):
         if (app.enemyPokemon.getHealth() <= ourPokemonMaxDmg(app)):
             switchPokemonEnemy(app,app.enemyTrainer.getCurrentIndex()+1)
-            app.enemyTrainer.increaseIndex(app)
-    else:
-        #attack the pokeomn using the best possible move
-        enemyPokemonAttacks(app,app.moveIndex)
-        #make it so each pokemon has a type, a corresponding mvoeset that is good plus super effective and lowered defense
-        #add in maze generation for more complexity
+            app.enemyTrainer.increaseIndex()
+        
+        
+    # else:
+    #     app.enemyTrainer.increase()
+
+
+    #attack the pokeomn using the best possible move
+    #make it so each pokemon has a type, a corresponding mvoeset that is good plus super effective and lowered defense
+    #add in maze generation for more complexity
 
 
 
@@ -552,7 +582,7 @@ def appStarted(app):
     app.xLength = 50
     app.battle = False
     app.player = Player(60,90)
-    app.enemyTrainer = Player(0,0)
+    app.enemyTrainer = Player(100,10)
     app.inTrainerBattle = False
     app.inGrass =False
     app.nextImage = False
