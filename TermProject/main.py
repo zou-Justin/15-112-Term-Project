@@ -34,13 +34,13 @@ def game_redrawAll(app,canvas):
     for i in range(len(app.terrain)):
         for j in range(len(app.terrain[0])):
             newX = app.xScale + i*30 - app.scrollX
-            newY = 150 + j *30
+            newY = 100 + j *30
             canvas.create_image(newX,newY,image=ImageTk.PhotoImage(app.grass))
     for i in range(len(app.player.getPokemon())):
         app.player.getPokemonIndex(i).setHealthMax()
     if (app.finalRoom):
-        canvas.create_image(x,y,image=ImageTk.PhotoImage(app.background))
-        canvas.create_image(100- app.scrollX ,100,image = ImageTk.PhotoImage(app.trainerSprite))
+            canvas.create_image(x,y,image=ImageTk.PhotoImage(app.finalBackground))
+            canvas.create_image(100- app.scrollX ,100,image = ImageTk.PhotoImage(app.trainerSprite))
     canvas.create_image(60, 90 + app.player.getY(), image=ImageTk.PhotoImage(newSprite))
 
 def inTerrain(app):
@@ -104,6 +104,7 @@ def game_timerFired(app):
         app.xScale = 600
     if (app.scrollX >= 880 and app.nextImage):
         app.finalRoom = True
+        app.nextImage = False
         app.scrollX = 30
         app.player.setX(60)
         app.player.setY(90)
@@ -274,7 +275,7 @@ def combat_mousePressed(app,event):
         app.mode = 'game'
         app.catching = False
         app.time = 0
-    if (app.battle == False):
+    elif (app.battle == False):
         if (187 - app.xLength*2 <= event.x <= 187 + app.xLength*2 and (300 - app.yLength) <= event.y <= (300 + app.yLength)):
             #Top Left
             app.battle = True
@@ -357,16 +358,18 @@ def combat_mousePressed(app,event):
             # enemyPokemonAttacks(app)
             
 def combat_timerFired(app):
+    if (app.inTrainerBattle):
+        trainerAI(app)
     if (app.enemyPokemon.getHealth() <= 0 and app.inTrainerBattle == False):
         #something about the game being over message
         app.battle = False
         app.mode = 'game'
     if (app.inTrainerBattle and allPokemonDeadTrainer(app)):
         app.mode = 'winScreen'
-    elif (app.enemyPokemon.getHealth() <= 0 and app.inTrainerBattle == True):
-        switchPokemonEnemy(app,app.enemyTrainer.getCurrentIndex()+1)
-        app.enemyTrainer.increaseIndex()
-    elif (app.playerPokemon.getHealth() <= 0 and allPokemonDead(app)):
+    # elif (app.enemyPokemon.getHealth() <= 0 and app.inTrainerBattle == True):
+    #     switchPokemonEnemy(app,app.enemyTrainer.getCurrentIndex()+1)
+    #     app.enemyTrainer.increaseIndex()
+    elif (app.playerPokemon.getHealth() <= 0 and allPokemonDead(app) and app.inTrainerBattle == True):
         app.mode = 'endScreen'
     elif (app.playerPokemon.getHealth() <= 0 and not allPokemonDead(app)):
         app.mode = 'Pokemon'
@@ -400,12 +403,14 @@ def winScreen_redrawAll(app,canvas):
 
 # General Functions
 
+#checks if all of your pokemon are dead
 def allPokemonDead(app):
     for i in app.player.getPokemon():
         if i.getHealth() > 0:
             return False
     return True
 
+#checks if all of the trainer's pokemons are dead
 def allPokemonDeadTrainer(app):
     for i in app.enemyTrainer.getPokemon():
         if i.getHealth() > 0:
@@ -417,6 +422,7 @@ def switchPokemon(app,index):
     if (len(app.player.getPokemon()) > index):
         app.playerPokemon = app.player.getPokemonIndex(index)
 
+#enemy pokemon switches out
 def switchPokemonEnemy(app,index):
     index = index % 6
     app.enemyPokemon = app.enemyTrainer.getPokemonIndex(index)
@@ -425,7 +431,7 @@ def switchPokemonEnemy(app,index):
 def encounterPokemon(app):
     # if (app.player.getX() <= )
     chance = random.randrange(1,100)
-    if (chance <= 8):
+    if (chance <= 18):
         app.mode = 'combat'
         newPokemon(app)
 
@@ -433,7 +439,7 @@ def encounterPokemon(app):
 def newPokemon(app):
     randLevel = random.randint(75,100)
     randEmenyPokemon = random.randint(0,len(app.pokemonSprites)-1)
-    enemyPokemon = Pokemon(None,app.name[randEmenyPokemon],randLevel,app.pokemonImages[randEmenyPokemon],app.moves[randEmenyPokemon])
+    enemyPokemon = Pokemon(app.pokemonToType[app.name[randEmenyPokemon]],app.name[randEmenyPokemon],randLevel,app.pokemonImages[randEmenyPokemon],app.moves[randEmenyPokemon])
     app.enemyBackSprite = app.backPokemonImages[randEmenyPokemon]
     enemyCopyMoves = []
     for i in enemyPokemon.getAllMoves():
@@ -446,6 +452,7 @@ def newPokemon(app):
     enemyPokemon.setMoves(enemyCopyMoves)
     app.enemyPokemon = enemyPokemon
 
+#creating a bunch of new Pokemons for the trainer
 def newPokemonTrainer(app):
     randLevel = random.randint(60,100)
     randEmenyPokemon = random.randint(0,len(app.pokemonSprites)-1)
@@ -470,24 +477,19 @@ def trainerPokemon(app):
 def trainerAI(app):
     app.mode = 'combat'
     app.inTrainerBattle = True
-    print(app.enemyTrainer.getPokemon())
+    # app.enemyTrainer.setCurrentIndex() 
     app.enemyPokemon = app.enemyTrainer.getCurrentPokemon() 
     if (app.enemyTrainer.getCurrentIndex() < 6):
         if (app.enemyPokemon.getHealth() <= ourPokemonMaxDmg(app)):
             switchPokemonEnemy(app,app.enemyTrainer.getCurrentIndex()+1)
             app.enemyTrainer.increaseIndex()
-        
-        
-    # else:
-    #     app.enemyTrainer.increase()
+    else:
+        switchPokemonEnemy(app,app.enemyTrainer.getCurrentIndex())
+        if (app.enemyPokemon.getHealth()) <= 0:
+            app.enemyTrainer.increaseIndex()
 
 
-    #attack the pokeomn using the best possible move
-    #make it so each pokemon has a type, a corresponding mvoeset that is good plus super effective and lowered defense
-    #add in maze generation for more complexity
-
-
-
+#just add in maze gen for complexity
 # # looked at https://www.cs.cmu.edu/~112/notes/student-tp-guides/Mazes.pdf
 # # looked at https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_depth-first_search
 # def generateMaze(app):
@@ -498,12 +500,11 @@ def trainerAI(app):
 #     if (isSolution()):
 #         return L
 
-
-
 # def outOfBounds(index1,index2,L):
 #     for i in L:
 #         for j in L:
 #             if ()
+
 
 #enemy Pokemon should be doing the maximum dmg at all times
 #Looked at AI TP https://www.cs.cmu.edu/~112/notes/student-tp-guides/GameAI.pdf
@@ -517,6 +518,7 @@ def enemyPokemonAttacksNoDmg(index,moveLists):
     index = index % len(moveLists)
     return((moveLists[index][0],moveLists[index][1]))
 
+#max damage that the pokemon can do
 def enemyPokemonMaxDmg(app):
     maxDmg = 0
     index = 0
@@ -525,7 +527,7 @@ def enemyPokemonMaxDmg(app):
             maxDmg = app.enemyPokemon.getMoves(i).getDmg()
             index = i
     return (maxDmg,index)
-
+#max damage that our pokemon can do
 def ourPokemonMaxDmg(app):
     maxDmg = 0
     for i in range(len(app.playerPokemon.getAllMoves())):
@@ -533,6 +535,7 @@ def ourPokemonMaxDmg(app):
             maxDmg = app.playerPokemon.getMoves(i).getDmg()
     return maxDmg
 
+# gives the move with the most speed
 def getSpeedMove(app):
     maxSpeed = 0
     index = 0
@@ -542,7 +545,7 @@ def getSpeedMove(app):
             index = i
     return (maxSpeed,index)
 
-#recursive backtracking that we learned in class
+#recursive backtracking that we learned in class to return a list of moves in best possible order
 def bestPossibleMove(app,health,L):
     if (health <= 0):
         return L
@@ -565,7 +568,15 @@ def isBetterMove(move,speed,dmg,health):
     else:
         return False
     
-    
+def createRandomMove(app):
+    randomDefenseMove = app.defensiveMoves[random.randint(0,len(app.defensiveMoves)-1)]
+    randomOffensiveNormalMoves = app.offensiveNormalMoves[random.randint(0,len(app.offensiveNormalMoves)-1)]
+    randomSpecialMove = app.specialMove[random.randint(0,len(app.offensiveNormalMoves)-1)]
+    randomSpeedMoves = app.speedMoves[random.randint(0,len(app.speedMoves)-1)]
+    app.moves2.append(randomDefenseMove)
+    app.moves2.append(randomOffensiveNormalMoves)
+    app.moves2.append(randomSpeedMoves)
+    app.moves2.append(randomSpecialMove)
 
 # ========================================================================
 #Spritesheet is taken https://www.deviantart.com/mohammadataya/art/Pokemon-Trainer-Calem-By-Tedbited15-Updated-397076725
@@ -600,6 +611,7 @@ def appStarted(app):
     app.background = app.scaleImage(app.background, 4/3)
     app.background2 = app.loadImage('img/longRoad4.png')
     app.background2 = app.scaleImage(app.background2, 4/3)
+    app.finalBackground = app.loadImage('img/championRoom.png')
     app.grass = app.loadImage('img/grass.png')
     app.bagImg = app.loadImage('img/bag.jpg')
     app.selectionImg = app.loadImage('img/selection.png')
@@ -640,7 +652,7 @@ def appStarted(app):
             app.imageDictionary[i] = j
     app.sprite = app.loadImage('img/player.png') 
     app.type = ['electric','grass','fire','water','normal','flying','fighting','dragon']
-    app.moveToType = {
+    app.typeToMove = {
         'electric':'Thunderbolt',
         'grass':'Vine Whip',
         'fire':'Flamethrower',
@@ -649,6 +661,14 @@ def appStarted(app):
         'flying':'Aerial Ace',
         'fighting':'Close Combat',
         'dragon':'Dragons Breath'
+    }
+    app.typeToWeakness = {
+        'electric':'Thunderbolt',
+        'grass':'fire',
+        'fire':'water',
+        'water':'grass',
+        'normal':'fighting',
+        'dragon':'dragon'
     }
     app.pokemonToType = {
         'Pikachu':'electric',
@@ -664,32 +684,38 @@ def appStarted(app):
         "Salamence":"dragon"
     }
     app.name = ['Pikachu','Bulbasaur','Charmander','Squritle','Slaking','Torchic','Treeko','Swellow','Mudkip','Machamp','Salamence']
-    #dont hardcode this pls make it better fool
-    #maybe more complexity
-    app.defensiveMoves = set(['Leer','Growl','Thunder Wave'])
-    app.offensiveNormalMoves = set(['Tackle','Scratch','Pound','Slam'])
-    app.specialMove = set(['Flamethrower','Thunderbolt','Vine Whip','Hydro Pump','Dragons Breath','Aerial Ace','Close Combat'])
-    app.speedMoves = set(['Quick Attack','Shadow Sneak','SuckerPunch'])
+    app.defensiveMoves = ['Leer','Growl']
+    app.offensiveNormalMoves = ['Tackle','Scratch','Pound','Slam']
+    app.specialMove = ['Flamethrower','Thunderbolt','Overgrowth','Hydro Pump','Dragons Breath','Aerial Ace','Close Combat','Body Slam']
+    app.speedMoves = ['Quick Attack','Shadow Sneak','SuckerPunch']
     
     app.moveName = [['Leer','Tackle','Quick Attack','Thunderbolt'],
-                ['Growl','Tackle','Quick Attack','Vine Whip'],
-                ['Leer','Tackle','Quick Attack','Ember'],
-                ['Leer','Tackle','Quick Attack','Water Gun'],
-                ['Leer','Tackle','Quick Attack','Thunderbolt'],
-                ['Leer','Tackle','Shadow Sneak','Vine Whip'],
-                ['Leer','Tackle','Quick Attack','Ember'],
-                ['Leer','Tackle','Quick Attack','Water Gun'],
-                ['Leer','Tackle','Quick Attack','Thunderbolt'],
-                ['Leer','Tackle','Quick Attack','Vine Whip'],
-                ['Leer','Tackle','Quick Attack','Ember'],
-                ['Leer','Tackle','Quick Attack','Water Gun']
+                ['Growl','Tackle','Quick Attack','Overgrowth'],
+                ['Leer','Scratch','Quick Attack','Flamethrower'],
+                ['Leer','Tackle','Quick Attack','Hydro Pump'],
+                ['Leer','Pound','SuckerPunch','Thunderbolt'],
+                ['Leer','Slam','Shadow Sneak','Body Slam'],
+                ['Growl','Tackle','Quick Attack','Flamethrower'],
+                ['Leer','Scratch','Quick Attack','Overgrowth'],
+                ['Growl','Pound','SuckerPunch','Aerial Ace'],
+                ['Leer','Scratch','Quick Attack','Hydro Pump'],
+                ['Growl','Tackle','SuckerPunch','Close Combat'],
+                ['Leer','Tackle','Quick Attack','Dragons Breath']
     ]
     app.moves = []
+    app.moves2 = []
+    createRandomMove(app)
+    print(app.moves2)
     for i in app.moveName:
         copyMove = []
         for j in range(len(i)):
             copyMove.append(Moves(10 * j,i[j],1))
         app.moves.append(copyMove)
+    
+    newCopyMove = []
+    for i in range(len(app.moves2)):
+        newCopyMove.append(Moves(20 * i,app.moves2[i],1))
+    app.moves2 = newCopyMove
     app.enemyPokemon = None
     #move texts
     app.Move0 = False
@@ -699,7 +725,7 @@ def appStarted(app):
     #create your pokemon
     randomPokemonIndex = random.randint(0,len(app.pokemonSprites)-1)
     randLevel2 = random.randint(75,100) #this should eventually be a set value
-    ourPokemon = Pokemon(None,app.name[randomPokemonIndex],randLevel2,app.backPokemonImages[randomPokemonIndex],app.moves[randomPokemonIndex])
+    ourPokemon = Pokemon(app.pokemonToType[app.name[randomPokemonIndex]],app.name[randomPokemonIndex],randLevel2,app.backPokemonImages[randomPokemonIndex],app.moves2)
     copyMoves = []
     for i in ourPokemon.getAllMoves():
         copyMoves.append(Moves(i.getDmg(),i.getMoveName(),ourPokemon.getLevel()))

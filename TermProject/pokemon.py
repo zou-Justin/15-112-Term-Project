@@ -92,6 +92,12 @@ class Moves(Pokemon):
         if (self.isDefensive):
             other.dmg *= 1.2
 
+    def getType(self):
+        return super().getType()
+
+    def getlevel(self):
+        return super().getLevel()
+
     def isFast(self,index):
         self.priority += index
     

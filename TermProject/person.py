@@ -34,10 +34,15 @@ class Player():
         return self.pokemons
 
     def getCurrentPokemon(self):
-        return self.pokemons[self.currentIndex]
+        index = self.currentIndex
+        index = index % 6
+        return self.pokemons[index]
 
     def getCurrentIndex(self):
         return self.currentIndex
+
+    def setCurrentIndex(self):
+        self.currentIndex = self.currentIndex % 6
 
     def getPokemonIndex(self,index):
         return self.pokemons[index]
