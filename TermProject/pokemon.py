@@ -80,10 +80,12 @@ class Moves(Pokemon):
         self.moveName = name
         self.isDefensive = False
         self.priority = 0
+        self.defenseDmg = 0
 
     def makeDefensive(self):
         self.isDefensive = True
         self.dmg = 0
+        self.defenseDmg = 60
 
     def getPokemonName(self):
         return super().getName()
@@ -114,6 +116,6 @@ class Moves(Pokemon):
         self.dmg -= amount
 
     def getDmg(self):
-        return self.dmg
+        return self.dmg 
     
     
