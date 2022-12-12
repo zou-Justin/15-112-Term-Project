@@ -1,6 +1,8 @@
 #Justin Zou (justinzo)
 #Pokemon
 import random
+
+#class for the player character and its x and y positions and pokemon
 class Player():
     def __init__(self,x,y):
         self.x = x

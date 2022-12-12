@@ -2,7 +2,7 @@
 #Pokemon
 import random
 
-
+# pokemon class containing the pokemon's dmg, level, sprite etc.
 class Pokemon():
     def __init__(self,type,name,level,sprite,moves):
         self.type = type
@@ -13,8 +13,6 @@ class Pokemon():
         self.health = self.maxHealth
         self.speed = level * random.randint(4,9)
         self.sprite = sprite
-        self.expToNextLevel = level * 200
-        self.exp = 0
         self.moves = moves
     
     def getSprite(self):
@@ -59,6 +57,7 @@ class Pokemon():
     def setMoves(self,newMoves):
         self.moves = newMoves
 
+    #dmg taken by pokemon
     def takeDmg(self,dmg):
         if (dmg > self.defense):
             self.health -= abs(dmg - self.defense)
@@ -66,14 +65,8 @@ class Pokemon():
     def healDmg(self,dmg):
         self.health += dmg
 
-    def gainExp(self,amount):
-        self.exp += amount
-        if self.exp >= self.expToNextLevel:
-            self.level += 1
-            self.exp -= self.expToNextLevel
-            self.expToNextLevel = self.level * 200
-    
-
+# moves class that takes pokemon as a parent class
+# gives dmg of the moves and name
 class Moves(Pokemon):
     def __init__(self,dmg,name,level):
         self.dmg = dmg + (level * 3)

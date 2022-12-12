@@ -5,9 +5,8 @@ from pokemon import *
 from person import *
 import random
 
-#images were taken from pokemon game screenshots
+# pokemon sprites were taken from the pokemon games themselves
 # Start Screen
-# gif code from cmu-112 website
 def startScreen_redrawAll(app,canvas):
     canvas.create_image(app.width/2,app.height/2, image=ImageTk.PhotoImage(app.startScreenImg2))
     canvas.create_text(app.width/2,app.height-app.width/12, text=f'Press Enter to Start',
@@ -259,7 +258,7 @@ def combat_redrawAll(app,canvas):
         canvas.create_text(483,300, text=f'{app.playerPokemon.getMoves(3).getMoveName()}',fill='black', font='Helvetica 10')
 
 
-
+#makeshift buttons
 def combat_mousePressed(app,event):
     if (app.catching == True):
         app.mode = 'game'
@@ -520,10 +519,13 @@ def createRandomMove(app):
     app.moves2.append(randomSpecialMove)
 
 # ========================================================================
-#Spritesheet is taken https://www.deviantart.com/mohammadataya/art/Pokemon-Trainer-Calem-By-Tedbited15-Updated-397076725
-#pikachus are from https://www.deviantart.com/koreyriera/art/Pikachu-Custom-Front-And-Back-Sprite-776102670
+# Spritesheet is taken https://www.deviantart.com/mohammadataya/art/Pokemon-Trainer-Calem-By-Tedbited15-Updated-397076725
+# pikachus are from https://www.deviantart.com/koreyriera/art/Pikachu-Custom-Front-And-Back-Sprite-776102670
 # Rest of the art are found from screnshots of the game
 # Sidescrolling is from Animations Part 4 notes
+# https://www.cs.cmu.edu/~112/notes/notes-animations-part4.html#sidescrollerExamples
+# https://www.cs.cmu.edu/~112/notes/notes-animations-part4.html#usingModes
+# https://www.deviantart.com/purplezaffre/art/Commission-Champion-Wallace-734700173
 def appStarted(app):
     #variables
     app.mode = 'startScreen'
@@ -679,6 +681,7 @@ def appStarted(app):
     trainerPokemon(app)
    
     #animations for player; basic structure taken from 15-112 notes
+    #https://www.cs.cmu.edu/~112/notes/notes-animations-part4.html#spritesheetsWithCropping
     movement = app.loadImage('img/MoveRight.png')
     app.Sprites = []
     for i in range(12):
